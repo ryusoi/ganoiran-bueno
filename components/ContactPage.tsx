@@ -2,8 +2,7 @@
 import React, { useState, useLayoutEffect, useRef } from 'react';
 import { 
     Instagram, MessageCircle, 
-    CheckCircle2, Send, Youtube, Linkedin, Facebook,
-    ArrowRight
+    CheckCircle2, Send, ArrowRight
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { ref, push } from 'firebase/database';
@@ -699,7 +698,6 @@ const ContactPage: React.FC = () => {
                             </g>
                         </g>
                     </g>
-                </defs>
             </svg>
         </div>
 
@@ -778,84 +776,81 @@ const ContactPage: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-lg font-serif text-white">{t('contact_shamila_name')}</p>
-                                    <p className="text-xs text-pink-300 font-mono tracking-wide">{t('contact_community')}</p>
+                                    <p className="text-xs text-pink-400 font-mono tracking-wide">{t('contact_shamila_role')}</p>
                                 </div>
                                 <ArrowRight className="w-5 h-5 ml-auto text-white/20 group-hover:text-pink-500 transition-colors" />
                             </a>
                         </div>
-
-                        {/* Social Hub Grid */}
-                        <div>
-                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-blue-400 mb-4 font-monolith font-bold">{t('contact_socials')}</h3>
-                            <div className="grid grid-cols-4 gap-4">
-                                <a href="https://t.me/ganoshakh" target="_blank" className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-[#0088cc]/20 hover:border-[#0088cc] flex items-center justify-center transition-all hover:-translate-y-1 group relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-[#0088cc]/0 to-[#0088cc]/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <Send className="w-5 h-5 text-[#0088cc] relative z-10" />
-                                </a>
-                                <a href="#" className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-[#0A66C2]/20 hover:border-[#0A66C2] flex items-center justify-center transition-all hover:-translate-y-1 group relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-[#0A66C2]/0 to-[#0A66C2]/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <Linkedin className="w-5 h-5 text-[#0A66C2] relative z-10" />
-                                </a>
-                                <a href="#" className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-[#FF0000]/20 hover:border-[#FF0000] flex items-center justify-center transition-all hover:-translate-y-1 group relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-[#FF0000]/0 to-[#FF0000]/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <Youtube className="w-5 h-5 text-[#FF0000] relative z-10" />
-                                </a>
-                                <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center opacity-50 cursor-not-allowed relative group">
-                                    <Facebook className="w-5 h-5 text-white" />
-                                    <span className="absolute -top-3 -right-2 text-[7px] font-bold uppercase tracking-wider bg-white text-black px-1.5 py-0.5 rounded shadow-sm z-20 pointer-events-none whitespace-nowrap">{t('contact_soon')}</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* RIGHT: Modern Form */}
-                    <div className="bg-black/40 p-8 rounded-3xl border border-white/5 shadow-inner">
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* RIGHT: Contact Form */}
+                    <div className="bg-white/5 p-8 rounded-3xl border border-white/10 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+                        
+                        <h3 className="text-2xl font-serif text-white mb-6">{t('contact_dm')}</h3>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                             <div>
-                                <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 font-monolith">{t('contact_name')}</label>
+                                <label className="text-[10px] uppercase tracking-widest text-neutral-400 mb-2 block font-bold">{t('contact_name')}</label>
                                 <input 
                                     type="text" 
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all premium-input"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors premium-input font-light"
-                                    placeholder="Your Name"
+                                    required
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 font-monolith">{t('contact_email')}</label>
+                                <label className="text-[10px] uppercase tracking-widest text-neutral-400 mb-2 block font-bold">{t('contact_email')}</label>
                                 <input 
                                     type="email" 
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all premium-input"
                                     value={formData.email}
                                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors premium-input font-light"
-                                    placeholder="name@example.com"
+                                    required
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 font-monolith">{t('contact_query')}</label>
+                                <label className="text-[10px] uppercase tracking-widest text-neutral-400 mb-2 block font-bold">{t('contact_query')}</label>
                                 <textarea 
+                                    rows={4}
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all premium-input resize-none"
                                     value={formData.query}
                                     onChange={(e) => setFormData({...formData, query: e.target.value})}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors h-32 resize-none premium-input font-light"
-                                    placeholder="How can we help?"
+                                    required
                                 />
                             </div>
+
                             <button 
                                 type="submit" 
-                                disabled={status !== 'idle'}
-                                className="w-full py-4 bg-white text-black font-monolith font-bold uppercase tracking-widest rounded-xl hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
+                                disabled={status === 'sending' || status === 'success'}
+                                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all shadow-lg ${status === 'success' ? 'bg-emerald-500 text-white' : 'bg-white text-black hover:bg-neutral-200'}`}
                             >
-                                {status === 'idle' && <>{t('contact_submit')} <ArrowRight className="w-4 h-4" /></>}
-                                {status === 'sending' && <span className="animate-pulse">{t('status_sending')}</span>}
-                                {status === 'success' && <><CheckCircle2 className="w-5 h-5 text-green-600" /> {t('contact_success')}</>}
+                                {status === 'sending' ? (
+                                    <span>{t('status_sending')}</span>
+                                ) : status === 'success' ? (
+                                    <>
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span>{t('contact_success')}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>{t('contact_submit')}</span>
+                                        <Send className="w-4 h-4" />
+                                    </>
+                                )}
                             </button>
+                            
+                            <p className="text-center text-[9px] text-neutral-500 uppercase tracking-wider">
+                                {t('contact_send_desc')}
+                            </p>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-  )
-}
+  );
+};
 
 export default ContactPage;
