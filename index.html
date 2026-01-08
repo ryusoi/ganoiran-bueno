@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gano Shakh - Log-Cultivated Ganoderma</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vanta JS Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <!-- GSAP for Hero Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- P5.js for Spore Simulation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <!-- Swiper JS & CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- tsParticles -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Instrument+Serif:ital,wght@0,400;1,400&family=Cinzel:wght@400;700&family=Oswald:wght@200;300;400;500;700&family=Syncopate:wght@100;300;400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        instrument: ['Instrument Serif', 'serif'],
+                        vintage: ['Cinzel', 'serif'],
+                        oswald: ['Oswald', 'sans-serif'],
+                        monolith: ['Syncopate', 'sans-serif'],
+                    },
+                    colors: {
+                        neutral: {
+                            50: '#fafafa',
+                            100: '#f5f5f5',
+                            850: '#1f1f1f',
+                            900: '#101014',
+                        },
+                        emerald: {
+                            450: '#10b981', // Custom accent
+                        },
+                        purple: {
+                            950: '#1a0b2e', // Deep purple for light mode text
+                        },
+                        // Quantum UI Colors
+                        dark: '#101014',
+                        accent: '#5E6AD2',
+                        gold: {
+                           100: '#fcf6ba',
+                           200: '#fbf5b7',
+                           300: '#bf953f',
+                           400: '#b38728',
+                           500: '#aa771c',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animation Base Classes */
+        .animate-on-scroll { opacity: 0; transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        
+        .fade-in { transform: translateY(40px); filter: blur(4px); }
+        .fade-in.animate { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        
+        .slide-up { transform: translateY(50px); filter: blur(3px); }
+        .slide-up.animate { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        
+        .slide-right { transform: translateX(60px); filter: blur(3px); }
+        .slide-right.animate { opacity: 1; transform: translateX(0); filter: blur(0px); }
+
+        .slide-left { transform: translateX(-60px); filter: blur(3px); }
+        .slide-left.animate { opacity: 1; transform: translateX(0); filter: blur(0px); }
+        
+        .scale-in { transform: scale(0.8); filter: blur(5px); }
+        .scale-in.animate { opacity: 1; transform: scale(1); filter: blur(0px); }
+        
+        .rotate-in { transform: rotate(-5deg) scale(0.9); filter: blur(3px); }
+        .rotate-in.animate { opacity: 1; transform: rotate(0deg) scale(1); filter: blur(0px); }
+
+        .text-reveal { opacity: 0; transform: translateY(20px); filter: blur(2px); transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .text-reveal.animate { opacity: 1; transform: translateY(0); filter: blur(0px); }
+
+        .image-reveal { opacity: 0; transform: scale(1.1); filter: blur(5px); transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .image-reveal.animate { opacity: 1; transform: scale(1); filter: blur(0px); }
+
+        .card-reveal { opacity: 0; transform: translateY(30px); filter: blur(2px); transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .card-reveal.animate { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        /* Stagger Delays */
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        .stagger-4 { transition-delay: 0.4s; }
+        .stagger-5 { transition-delay: 0.5s; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #101014; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        html.light ::-webkit-scrollbar-track { background: #f0f0f0; }
+        html.light ::-webkit-scrollbar-thumb { background: #ccc; }
+        html.light ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+        /* Hero Parallax */
+        .hero-parallax-bg { will-change: transform; }
+
+        /* SILVER CHROME TEXT EFFECT - HIGH DEFINITION */
+        @keyframes shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .text-chrome {
+            background: linear-gradient(
+                110deg, 
+                #444444 10%, 
+                #ffffff 25%, 
+                #a0a0a0 40%, 
+                #555555 50%, 
+                #a0a0a0 60%, 
+                #ffffff 75%, 
+                #444444 90%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+            animation: shine 4s linear infinite;
+            letter-spacing: -0.02em;
+        }
+
+        /* High Contrast Chrome for Light Mode */
+        html:not(.dark) .text-chrome {
+            background: linear-gradient(
+                110deg, 
+                #1a0b2e 10%, 
+                #6b21a8 25%, 
+                #4c1d95 40%, 
+                #1a0b2e 50%, 
+                #4c1d95 60%, 
+                #6b21a8 75%, 
+                #1a0b2e 90%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0px 0px 15px rgba(107, 33, 168, 0.1);
+        }
+
+        /* GOLD CHROME ANIMATIONS - HIGH DEFINITION */
+        @keyframes gold-shine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Updated Scanline - Faster & Smoother */
+        @keyframes scanline {
+            0% { transform: translateX(-100%) skewX(-25deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(200%) skewX(-25deg); opacity: 0; }
+        }
+
+        .text-gold-chrome {
+            background: linear-gradient(
+                90deg, 
+                #aa771c 0%, 
+                #bf953f 20%, 
+                #fff8dc 45%, 
+                #fff8dc 55%, 
+                #b38728 80%, 
+                #aa771c 100%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gold-shine 3s ease-in-out infinite;
+            filter: drop-shadow(0px 0px 2px rgba(170, 119, 28, 0.5));
+        }
+
+        /* High Contrast Gold for Light Mode */
+        html:not(.dark) .text-gold-chrome {
+            background: linear-gradient(
+                90deg, 
+                #8a5a0c 0%, 
+                #b8860b 20%, 
+                #d4af37 40%, 
+                #8b4513 60%, 
+                #cd853f 80%, 
+                #8a5a0c 100%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0px 1px 1px rgba(0,0,0,0.2); 
+        }
+        
+        /* Monolith Robotica Font Utility */
+        .font-monolith {
+            font-family: 'Syncopate', sans-serif;
+            text-transform: uppercase;
+            font-weight: 700; /* Bold for headers, or 400 for regular */
+            letter-spacing: 0.1em;
+        }
+        
+        /* Faster duration (2.5s) for high energy shine */
+        .logo-scanline {
+            animation: scanline 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+        }
+
+        /* METEOR ANIMATION FOR LOGIN */
+        @keyframes meteor {
+          0% { transform: rotate(215deg) translateX(0); opacity: 1; }
+          70% { opacity: 1; }
+          100% { transform: rotate(215deg) translateX(-500px); opacity: 0; }
+        }
+        .meteor {
+          position: absolute;
+          height: 1px;
+          width: 1px;
+          border-radius: 9999px;
+          background-color: rgba(209, 213, 219, 0.8);
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+          transform: rotate(215deg);
+          animation: meteor 5s linear infinite;
+        }
+        .meteor::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 50px;
+          height: 1px;
+          background: linear-gradient(to right, rgba(209, 213, 219, 0.8), transparent);
+        }
+
+        /* Float Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.2",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/analytics": "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+  }
+}
+</script>
+</head>
+<body class="bg-[#F9FAFB] dark:bg-neutral-900 text-[#1a0b2e] dark:text-white antialiased transition-colors duration-300 overflow-x-hidden">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
