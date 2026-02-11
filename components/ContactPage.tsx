@@ -699,7 +699,7 @@ const ContactPage: React.FC = () => {
                             </g>
                         </g>
                     </g>
-                </defs>
+                </g>
             </svg>
         </div>
 
