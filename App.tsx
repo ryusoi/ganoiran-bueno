@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, Suspense, lazy, useRef, ReactNode } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { products as initialProducts, resolveUrl, formatPrice, STORAGE_URL } from './data';
 import { Product } from './types';
 import { auth } from './lib/firebase';
@@ -23,6 +23,8 @@ import AdvancedHero from './components/AdvancedHero'; // Keep eager for LCP
 import ProductGrid from './components/ProductGrid';
 import SporeFooter from './components/SporeFooter';
 import SocialProofBubble from './components/SocialProofBubble';
+import MycoPulseSection from './components/MycoPulseSection';
+import CoffeeTeaCube from './components/CoffeeTeaCube'; // Import new section
 import { useLanguage } from './contexts/LanguageContext';
 import { 
   ShoppingBag, Menu, X, Plus, Minus, Users, Map, ChevronUp, ChevronDown, Share2, Sun, Moon
@@ -34,8 +36,6 @@ const GanoMediaGallery = lazy(() => import('./components/GanoMediaGallery'));
 const CultivationVideo = lazy(() => import('./components/CultivationVideo'));
 const TeaRitual = lazy(() => import('./components/TeaRitual'));
 const InstagramInvite = lazy(() => import('./components/InstagramInvite'));
-const LazyMycoPulseSection = lazy(() => import('./components/MycoPulseSection'));
-const LazyCoffeeTeaCube = lazy(() => import('./components/CoffeeTeaCube'));
 
 // --- Types ---
 type Page = 'home' | 'shop' | 'about' | 'contact' | 'product_detail' | 'skincare' | 'pets' | 'extract' | 'decor';
@@ -94,43 +94,6 @@ const useScrollAnimation = (dependencies: any[] = []) => {
       clearTimeout(failsafeId);
     };
   }, dependencies);
-};
-
-const LazySection: React.FC<{
-  children: ReactNode;
-  fallback: ReactNode;
-  rootMargin?: string;
-  intrinsicSize?: string;
-}> = ({ children, fallback, rootMargin = '350px 0px', intrinsicSize = '900px' }) => {
-  const [shouldRender, setShouldRender] = useState(false);
-  const sectionRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const node = sectionRef.current;
-    if (!node || shouldRender) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldRender(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin, threshold: 0.01 }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [rootMargin, shouldRender]);
-
-  return (
-    <section
-      ref={sectionRef}
-      style={{ contentVisibility: 'auto', containIntrinsicSize: intrinsicSize }}
-    >
-      {shouldRender ? <Suspense fallback={fallback}>{children}</Suspense> : fallback}
-    </section>
-  );
 };
 
 // --- Sub-Components ---
@@ -573,40 +536,36 @@ const App: React.FC = () => {
             <TrustBar />
             
             {/* Lazy Load Heavy Below-Fold Sections */}
-            <LazySection fallback={<div className="h-96 w-full bg-[#101014] animate-pulse"></div>} intrinsicSize="1200px">
-              <CollectionParallax 
-                products={translatedProducts} 
-                addToCart={addToCart} 
-                onProductClick={handleProductClick} 
-              />
-            </LazySection>
+            <Suspense fallback={<div className="h-96 w-full bg-[#101014] animate-pulse"></div>}>
+                <CollectionParallax 
+                    products={translatedProducts} 
+                    addToCart={addToCart} 
+                    onProductClick={handleProductClick} 
+                />
+            </Suspense>
 
             {/* NEW SECTION: MYCO DOC PULSE */}
-            <LazySection fallback={<div className="h-[520px] w-full bg-[#101014]"></div>} intrinsicSize="520px">
-              <LazyMycoPulseSection onOpenChat={() => setIsChatOpen(true)} />
-            </LazySection>
+            <MycoPulseSection onOpenChat={() => setIsChatOpen(true)} />
 
-            <LazySection fallback={<div className="h-64 w-full bg-[#101014]"></div>} intrinsicSize="500px">
-              <GanoMediaGallery />
-            </LazySection>
+            <Suspense fallback={<div className="h-64 w-full bg-[#101014]"></div>}>
+                <GanoMediaGallery />
+            </Suspense>
 
-            <LazySection fallback={<div className="h-screen w-full bg-black"></div>} intrinsicSize="900px">
-              <CultivationVideo onOpenChat={() => setIsChatOpen(true)} />
-            </LazySection>
+            <Suspense fallback={<div className="h-screen w-full bg-black"></div>}>
+                <CultivationVideo onOpenChat={() => setIsChatOpen(true)} />
+            </Suspense>
 
             {/* New Coffee & Tea Cube Section */}
-            <LazySection fallback={<div className="h-[640px] w-full bg-[#101014]"></div>} intrinsicSize="640px">
-              <LazyCoffeeTeaCube />
-            </LazySection>
+            <CoffeeTeaCube />
 
-            <LazySection fallback={<div className="h-96 w-full bg-[#101014]"></div>} intrinsicSize="600px">
-              <TeaRitual />
-            </LazySection>
+            <Suspense fallback={<div className="h-96 w-full bg-[#101014]"></div>}>
+                <TeaRitual />
+            </Suspense>
 
             {/* New Instagram Invite Section */}
-            <LazySection fallback={<div className="h-48 w-full bg-neutral-900"></div>} intrinsicSize="300px">
-              <InstagramInvite />
-            </LazySection>
+            <Suspense fallback={<div className="h-48 w-full bg-neutral-900"></div>}>
+                <InstagramInvite />
+            </Suspense>
           </>
         )}
 

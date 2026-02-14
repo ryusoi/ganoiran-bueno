@@ -93,31 +93,6 @@ const CollectionParallax: React.FC<CollectionParallaxProps> = ({ products, addTo
         /* Extras */
         #parallax-world-of-ugg .line-break {border-bottom:1px solid black; width: 150px; margin:0 auto;}
 
-        html { scroll-behavior: smooth; }
-
-        @media (max-width: 1024px) {
-          #parallax-world-of-ugg .parallax-one {
-            background-attachment: scroll;
-            background-position: center;
-          }
-
-          .fixed-component-bg {
-            position: absolute;
-            height: 100%;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          #parallax-world-of-ugg .parallax-one {
-            background-attachment: scroll;
-          }
-
-          .fixed-component-bg {
-            position: absolute;
-            height: 100%;
-          }
-        }
-
         /* Media Queries */
         @media screen and (max-width: 959px) and (min-width: 768px) {
           #parallax-world-of-ugg .block {padding: 40px; width:620px;}

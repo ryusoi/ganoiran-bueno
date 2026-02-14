@@ -45,7 +45,6 @@ const AdvancedHero: React.FC<{ setPage: (p: any) => void }> = ({ setPage }) => {
   const { t, language } = useLanguage();
 
   // Memoize localized data to prevent unnecessary re-calculations
-  // The content of these objects updates instantly when `language` changes
   const localizedHeroData = useMemo(() => {
       return heroData.map((item, index) => ({
           ...item,
@@ -57,315 +56,326 @@ const AdvancedHero: React.FC<{ setPage: (p: any) => void }> = ({ setPage }) => {
   }, [t, language]);
 
   useEffect(() => {
-    if (!window.gsap) {
-        console.error("GSAP not loaded");
-        return;
-    }
+    let ctx: any;
+    let timer: any;
 
-    const gsap = window.gsap;
-    
-    const ctx = gsap.context(() => {
-        // Dynamic order based on length of data
-        let order = Array.from({length: localizedHeroData.length}, (_, i) => i);
-        let offsetTop = 200;
-        let offsetLeft = 700;
-        let cardWidth = 200;
-        let cardHeight = 300;
-        let gap = 40;
-        let numberSize = 50;
-        
-        const ease = "power2.inOut"; 
-        const transitionDuration = 2.5; 
-        const textRevealDuration = 2.0;
-        const viewingTime = 8;
-
-        let clicks = 0;
-
-        const getCard = (index: number) => `#card${index}`;
-        const getCardContent = (index: number) => `#card-content-${index}`;
-        const getSliderItem = (index: number) => `#slide-item-${index}`;
-        const getDetails = (index: number) => `#details-${index}`;
-
-        function animate(target: string | Element, duration: number, properties: any) {
-            return new Promise((resolve) => {
-                gsap.to(target, {
-                    ...properties,
-                    duration: duration,
-                    onComplete: resolve,
-                    force3D: true,
-                });
-            });
+    const initGSAP = () => {
+        if (!window.gsap) {
+            // Retry if GSAP hasn't loaded yet
+            timer = setTimeout(initGSAP, 100);
+            return;
         }
 
-        function init() {
-            const [active, ...rest] = order;
-            const { innerHeight: height, innerWidth: width } = window;
+        const gsap = window.gsap;
+        
+        ctx = gsap.context(() => {
+            // Dynamic order based on length of data
+            let order = Array.from({length: localizedHeroData.length}, (_, i) => i);
+            let offsetTop = 200;
+            let offsetLeft = 700;
+            let cardWidth = 200;
+            let cardHeight = 300;
+            let gap = 40;
+            let numberSize = 50;
             
-            // Responsive Adjustments
-            if (width < 768) {
-                cardWidth = 140;
-                cardHeight = 180;
-                gap = 20;
-                offsetTop = height - 220; 
-                offsetLeft = 20; 
-            } else {
-                cardWidth = 160;
-                cardHeight = 220;
-                gap = 20;
-                offsetTop = height - 240; 
-                offsetLeft = width - 450; 
+            const ease = "power2.inOut"; 
+            const transitionDuration = 2.5; 
+            const textRevealDuration = 2.0;
+            const viewingTime = 8;
+
+            let clicks = 0;
+
+            const getCard = (index: number) => `#card${index}`;
+            const getCardContent = (index: number) => `#card-content-${index}`;
+            const getSliderItem = (index: number) => `#slide-item-${index}`;
+            const getDetails = (index: number) => `#details-${index}`;
+
+            function animate(target: string | Element, duration: number, properties: any) {
+                return new Promise((resolve) => {
+                    gsap.to(target, {
+                        ...properties,
+                        duration: duration,
+                        onComplete: resolve,
+                        force3D: true,
+                    });
+                });
             }
 
-            // HIDE ALL DETAILS & PREP POSITIONS
-            localizedHeroData.forEach((_, i) => {
-                gsap.set(getDetails(i), { opacity: 0, zIndex: 0, x: -200 });
-                // Reset internal elements to "hidden/below" state for animation
-                const el = getDetails(i);
-                gsap.set(`${el} .text`, { y: 100 });
-                gsap.set(`${el} .title-1`, { y: 100 });
-                gsap.set(`${el} .title-2`, { y: 100 });
-                gsap.set(`${el} .desc`, { y: 50 });
-                gsap.set(`${el} .cta`, { y: 60 });
-            });
-
-            gsap.set(".indicator", { x: -window.innerWidth });
-            
-            // Setup Pagination
-            gsap.set("#pagination", {
-                top: offsetTop + (width < 768 ? 200 : 250),
-                left: offsetLeft,
-                y: 200,
-                opacity: 0,
-                zIndex: 60,
-            });
-
-            // Setup Active Card (Background)
-            gsap.set(getCard(active), {
-                x: 0,
-                y: 0,
-                width: window.innerWidth,
-                height: window.innerHeight,
-                zIndex: 20,
-            });
-            gsap.set(getCardContent(active), { x: 0, y: 0, opacity: 0 });
-            
-            // INITIAL REVEAL FOR ACTIVE DETAILS
-            const activeDetails = getDetails(active);
-            gsap.set(activeDetails, { opacity: 0, zIndex: 22, x: -200 });
-            
-            // Progress Bar
-            gsap.set(".progress-sub-foreground", {
-                width: (width < 768 ? 200 : 500) * (1 / order.length) * (active + 1),
-            });
-
-            // Position the rest of the cards
-            rest.forEach((i, index) => {
-                gsap.set(getCard(i), {
-                    x: offsetLeft + 400 + index * (cardWidth + gap),
-                    y: offsetTop,
-                    width: cardWidth,
-                    height: cardHeight,
-                    zIndex: 30,
-                    borderRadius: 10,
-                });
-                gsap.set(getCardContent(i), {
-                    x: offsetLeft + 400 + index * (cardWidth + gap),
-                    zIndex: 40,
-                    y: offsetTop + cardHeight - 100,
-                });
-                gsap.set(getSliderItem(i), { x: (index + 1) * numberSize });
-            });
-
-            const startDelay = 0.6;
-
-            // Animate Cover Wipe
-            gsap.to(".cover", {
-                x: width + 400,
-                delay: 0.5,
-                ease,
-                duration: 1.5,
-                onComplete: () => {
-                    gsap.delayedCall(0.5, loop);
-                },
-            });
-
-            // Animate Grid Cards In
-            rest.forEach((i, index) => {
-                gsap.to(getCard(i), {
-                    x: offsetLeft + index * (cardWidth + gap),
-                    zIndex: 30,
-                    delay: startDelay + (0.1 * index),
-                    duration: transitionDuration,
-                    ease,
-                    force3D: true,
-                });
-                gsap.to(getCardContent(i), {
-                    x: offsetLeft + index * (cardWidth + gap),
-                    zIndex: 40,
-                    delay: startDelay + (0.1 * index),
-                    duration: transitionDuration,
-                    ease,
-                    force3D: true,
-                });
-            });
-
-            // Reveal Text & UI - Active Slide
-            gsap.to("#pagination", { y: 0, opacity: 1, ease, delay: startDelay, duration: 1.5 });
-            
-            // Animate Active Details Container
-            gsap.to(activeDetails, { opacity: 1, x: 0, ease, delay: startDelay, duration: 1.5 });
-            
-            // Animate Text Elements inside Active Details (Initial load)
-            gsap.to(`${activeDetails} .text`, { y: 0, delay: startDelay + 0.1, duration: 1, ease });
-            gsap.to(`${activeDetails} .title-1`, { y: 0, delay: startDelay + 0.2, duration: 1, ease });
-            gsap.to(`${activeDetails} .title-2`, { y: 0, delay: startDelay + 0.2, duration: 1, ease });
-            gsap.to(`${activeDetails} .desc`, { y: 0, delay: startDelay + 0.3, duration: 1, ease });
-            gsap.to(`${activeDetails} .cta`, { y: 0, delay: startDelay + 0.4, duration: 1, ease });
-        }
-
-        function step() {
-            return new Promise((resolve) => {
-                const prevActiveIndex = order[0];
-                order.push(order.shift() as number);
-                const activeIndex = order[0];
-
-                // Identifiers
-                const activeDetails = getDetails(activeIndex);
-                const prevDetails = getDetails(prevActiveIndex);
-
-                // Prepare New Active Details (Hidden, Left)
-                gsap.set(activeDetails, { zIndex: 22, x: -200, opacity: 0 });
-                // Reset text positions for reveal animation
-                gsap.set(`${activeDetails} .text`, { y: 100 });
-                gsap.set(`${activeDetails} .title-1`, { y: 100 });
-                gsap.set(`${activeDetails} .title-2`, { y: 100 });
-                gsap.set(`${activeDetails} .desc`, { y: 50 });
-                gsap.set(`${activeDetails} .cta`, { y: 60 });
-
-                // Animate Active Details In
-                gsap.to(activeDetails, { opacity: 1, x: 0, delay: 0.4, ease, duration: 1 });
-                
-                // Staggered Text Reveal
-                gsap.to(`${activeDetails} .text`, { y: 0, delay: 0.1, duration: textRevealDuration, ease });
-                gsap.to(`${activeDetails} .title-1`, { y: 0, delay: 0.2, duration: textRevealDuration, ease });
-                gsap.to(`${activeDetails} .title-2`, { y: 0, delay: 0.2, duration: textRevealDuration, ease });
-                gsap.to(`${activeDetails} .desc`, { y: 0, delay: 0.4, duration: textRevealDuration, ease });
-                gsap.to(`${activeDetails} .cta`, { y: 0, delay: 0.5, duration: textRevealDuration, onComplete: resolve, ease });
-                
-                // Hide Previous Details
-                gsap.set(prevDetails, { zIndex: 12 }); // Move to back
-                gsap.to(prevDetails, { opacity: 0, duration: 1, ease }); // Fade out
-
-                // --- CARD ANIMATION LOGIC (UNCHANGED) ---
+            function init() {
                 const [active, ...rest] = order;
-                const prv = rest[rest.length - 1]; // The card that was background and needs to return to grid
+                const { innerHeight: height, innerWidth: width } = window;
+                
+                // Responsive Adjustments
+                if (width < 768) {
+                    cardWidth = 140;
+                    cardHeight = 180;
+                    gap = 20;
+                    offsetTop = height - 220; 
+                    offsetLeft = 20; 
+                } else {
+                    cardWidth = 160;
+                    cardHeight = 220;
+                    gap = 20;
+                    offsetTop = height - 240; 
+                    offsetLeft = width - 450; 
+                }
 
-                gsap.set(getCard(prv), { zIndex: 10 });
-                gsap.set(getCard(active), { zIndex: 20 });
-                gsap.to(getCard(prv), { scale: 1.5, ease, duration: transitionDuration });
+                // HIDE ALL DETAILS & PREP POSITIONS
+                localizedHeroData.forEach((_, i) => {
+                    gsap.set(getDetails(i), { opacity: 0, zIndex: 0, x: -200 });
+                    // Reset internal elements to "hidden/below" state for animation
+                    const el = getDetails(i);
+                    gsap.set(`${el} .text`, { y: 100 });
+                    gsap.set(`${el} .title-1`, { y: 100 });
+                    gsap.set(`${el} .title-2`, { y: 100 });
+                    gsap.set(`${el} .desc`, { y: 50 });
+                    gsap.set(`${el} .cta`, { y: 60 });
+                });
 
-                gsap.to(getCardContent(active), {
-                    y: offsetTop + cardHeight - 10,
+                gsap.set(".indicator", { x: -window.innerWidth });
+                
+                // Setup Pagination
+                gsap.set("#pagination", {
+                    top: offsetTop + (width < 768 ? 200 : 250),
+                    left: offsetLeft,
+                    y: 200,
                     opacity: 0,
-                    duration: 0.5,
-                    ease,
-                });
-                gsap.to(getSliderItem(active), { x: 0, ease, duration: transitionDuration });
-                gsap.to(getSliderItem(prv), { x: -numberSize, ease, duration: transitionDuration });
-                gsap.to(".progress-sub-foreground", {
-                    width: (window.innerWidth < 768 ? 200 : 500) * (1 / order.length) * (active + 1),
-                    ease,
-                    duration: transitionDuration
+                    zIndex: 60,
                 });
 
-                // Main card expansion
-                gsap.to(getCard(active), {
+                // Setup Active Card (Background)
+                gsap.set(getCard(active), {
                     x: 0,
                     y: 0,
-                    ease,
-                    duration: transitionDuration,
                     width: window.innerWidth,
                     height: window.innerHeight,
-                    borderRadius: 0,
-                    force3D: true,
-                    onComplete: () => {
-                        const xNew = offsetLeft + (rest.length - 1) * (cardWidth + gap);
-                        gsap.set(getCard(prv), {
-                            x: xNew,
-                            y: offsetTop,
-                            width: cardWidth,
-                            height: cardHeight,
-                            zIndex: 30,
-                            borderRadius: 10,
-                            scale: 1,
-                        });
+                    zIndex: 20,
+                });
+                gsap.set(getCardContent(active), { x: 0, y: 0, opacity: 0 });
+                
+                // INITIAL REVEAL FOR ACTIVE DETAILS
+                const activeDetails = getDetails(active);
+                gsap.set(activeDetails, { opacity: 0, zIndex: 22, x: -200 });
+                
+                // Progress Bar
+                gsap.set(".progress-sub-foreground", {
+                    width: (width < 768 ? 200 : 500) * (1 / order.length) * (active + 1),
+                });
 
-                        gsap.set(getCardContent(prv), {
-                            x: xNew,
-                            y: offsetTop + cardHeight - 100,
-                            opacity: 1,
-                            zIndex: 40,
-                        });
-                        gsap.set(getSliderItem(prv), { x: rest.length * numberSize });
-                        
-                        clicks -= 1;
-                        if (clicks > 0) {
-                            step();
-                        }
+                // Position the rest of the cards
+                rest.forEach((i, index) => {
+                    gsap.set(getCard(i), {
+                        x: offsetLeft + 400 + index * (cardWidth + gap),
+                        y: offsetTop,
+                        width: cardWidth,
+                        height: cardHeight,
+                        zIndex: 30,
+                        borderRadius: 10,
+                    });
+                    gsap.set(getCardContent(i), {
+                        x: offsetLeft + 400 + index * (cardWidth + gap),
+                        zIndex: 40,
+                        y: offsetTop + cardHeight - 100,
+                    });
+                    gsap.set(getSliderItem(i), { x: (index + 1) * numberSize });
+                });
+
+                const startDelay = 0.6;
+
+                // Animate Cover Wipe
+                gsap.to(".cover", {
+                    x: width + 400,
+                    delay: 0.5,
+                    ease,
+                    duration: 1.5,
+                    onComplete: () => {
+                        gsap.delayedCall(0.5, loop);
                     },
                 });
 
+                // Animate Grid Cards In
                 rest.forEach((i, index) => {
-                    if (i !== prv) {
-                        const xNew = offsetLeft + index * (cardWidth + gap);
-                        gsap.set(getCard(i), { zIndex: 30 });
-                        gsap.to(getCard(i), {
-                            x: xNew,
-                            y: offsetTop,
-                            width: cardWidth,
-                            height: cardHeight,
-                            ease,
-                            duration: transitionDuration,
-                            delay: 0.1 * (index + 1),
-                            force3D: true,
-                        });
-
-                        gsap.to(getCardContent(i), {
-                            x: xNew,
-                            y: offsetTop + cardHeight - 100,
-                            opacity: 1,
-                            zIndex: 40,
-                            ease,
-                            duration: transitionDuration,
-                            delay: 0.1 * (index + 1),
-                            force3D: true,
-                        });
-                        gsap.to(getSliderItem(i), { x: (index + 1) * numberSize, ease, duration: transitionDuration });
-                    }
+                    gsap.to(getCard(i), {
+                        x: offsetLeft + index * (cardWidth + gap),
+                        zIndex: 30,
+                        delay: startDelay + (0.1 * index),
+                        duration: transitionDuration,
+                        ease,
+                        force3D: true,
+                    });
+                    gsap.to(getCardContent(i), {
+                        x: offsetLeft + index * (cardWidth + gap),
+                        zIndex: 40,
+                        delay: startDelay + (0.1 * index),
+                        duration: transitionDuration,
+                        ease,
+                        force3D: true,
+                    });
                 });
-            });
-        }
 
-        async function loop() {
-            // Static phase
-            await animate(".indicator", viewingTime, { x: 0, ease: "linear" });
-            // Zip phase
-            await animate(".indicator", 0.5, { x: window.innerWidth, ease: "power2.in" });
-            
-            // Reset bar
-            gsap.set(".indicator", { x: -window.innerWidth });
-            
-            // Transition
-            await step();
-            
-            // Repeat
-            loop();
-        }
+                // Reveal Text & UI - Active Slide
+                gsap.to("#pagination", { y: 0, opacity: 1, ease, delay: startDelay, duration: 1.5 });
+                
+                // Animate Active Details Container
+                gsap.to(activeDetails, { opacity: 1, x: 0, ease, delay: startDelay, duration: 1.5 });
+                
+                // Animate Text Elements inside Active Details (Initial load)
+                gsap.to(`${activeDetails} .text`, { y: 0, delay: startDelay + 0.1, duration: 1, ease });
+                gsap.to(`${activeDetails} .title-1`, { y: 0, delay: startDelay + 0.2, duration: 1, ease });
+                gsap.to(`${activeDetails} .title-2`, { y: 0, delay: startDelay + 0.2, duration: 1, ease });
+                gsap.to(`${activeDetails} .desc`, { y: 0, delay: startDelay + 0.3, duration: 1, ease });
+                gsap.to(`${activeDetails} .cta`, { y: 0, delay: startDelay + 0.4, duration: 1, ease });
+            }
 
-        init();
-    }, containerRef);
+            function step() {
+                return new Promise((resolve) => {
+                    const prevActiveIndex = order[0];
+                    order.push(order.shift() as number);
+                    const activeIndex = order[0];
 
-    return () => ctx.revert();
+                    // Identifiers
+                    const activeDetails = getDetails(activeIndex);
+                    const prevDetails = getDetails(prevActiveIndex);
+
+                    // Prepare New Active Details (Hidden, Left)
+                    gsap.set(activeDetails, { zIndex: 22, x: -200, opacity: 0 });
+                    // Reset text positions for reveal animation
+                    gsap.set(`${activeDetails} .text`, { y: 100 });
+                    gsap.set(`${activeDetails} .title-1`, { y: 100 });
+                    gsap.set(`${activeDetails} .title-2`, { y: 100 });
+                    gsap.set(`${activeDetails} .desc`, { y: 50 });
+                    gsap.set(`${activeDetails} .cta`, { y: 60 });
+
+                    // Animate Active Details In
+                    gsap.to(activeDetails, { opacity: 1, x: 0, delay: 0.4, ease, duration: 1 });
+                    
+                    // Staggered Text Reveal
+                    gsap.to(`${activeDetails} .text`, { y: 0, delay: 0.1, duration: textRevealDuration, ease });
+                    gsap.to(`${activeDetails} .title-1`, { y: 0, delay: 0.2, duration: textRevealDuration, ease });
+                    gsap.to(`${activeDetails} .title-2`, { y: 0, delay: 0.2, duration: textRevealDuration, ease });
+                    gsap.to(`${activeDetails} .desc`, { y: 0, delay: 0.4, duration: textRevealDuration, ease });
+                    gsap.to(`${activeDetails} .cta`, { y: 0, delay: 0.5, duration: textRevealDuration, onComplete: resolve, ease });
+                    
+                    // Hide Previous Details
+                    gsap.set(prevDetails, { zIndex: 12 }); // Move to back
+                    gsap.to(prevDetails, { opacity: 0, duration: 1, ease }); // Fade out
+
+                    // --- CARD ANIMATION LOGIC (UNCHANGED) ---
+                    const [active, ...rest] = order;
+                    const prv = rest[rest.length - 1]; // The card that was background and needs to return to grid
+
+                    gsap.set(getCard(prv), { zIndex: 10 });
+                    gsap.set(getCard(active), { zIndex: 20 });
+                    gsap.to(getCard(prv), { scale: 1.5, ease, duration: transitionDuration });
+
+                    gsap.to(getCardContent(active), {
+                        y: offsetTop + cardHeight - 10,
+                        opacity: 0,
+                        duration: 0.5,
+                        ease,
+                    });
+                    gsap.to(getSliderItem(active), { x: 0, ease, duration: transitionDuration });
+                    gsap.to(getSliderItem(prv), { x: -numberSize, ease, duration: transitionDuration });
+                    gsap.to(".progress-sub-foreground", {
+                        width: (window.innerWidth < 768 ? 200 : 500) * (1 / order.length) * (active + 1),
+                        ease,
+                        duration: transitionDuration
+                    });
+
+                    // Main card expansion
+                    gsap.to(getCard(active), {
+                        x: 0,
+                        y: 0,
+                        ease,
+                        duration: transitionDuration,
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                        borderRadius: 0,
+                        force3D: true,
+                        onComplete: () => {
+                            const xNew = offsetLeft + (rest.length - 1) * (cardWidth + gap);
+                            gsap.set(getCard(prv), {
+                                x: xNew,
+                                y: offsetTop,
+                                width: cardWidth,
+                                height: cardHeight,
+                                zIndex: 30,
+                                borderRadius: 10,
+                                scale: 1,
+                            });
+
+                            gsap.set(getCardContent(prv), {
+                                x: xNew,
+                                y: offsetTop + cardHeight - 100,
+                                opacity: 1,
+                                zIndex: 40,
+                            });
+                            gsap.set(getSliderItem(prv), { x: rest.length * numberSize });
+                            
+                            clicks -= 1;
+                            if (clicks > 0) {
+                                step();
+                            }
+                        },
+                    });
+
+                    rest.forEach((i, index) => {
+                        if (i !== prv) {
+                            const xNew = offsetLeft + index * (cardWidth + gap);
+                            gsap.set(getCard(i), { zIndex: 30 });
+                            gsap.to(getCard(i), {
+                                x: xNew,
+                                y: offsetTop,
+                                width: cardWidth,
+                                height: cardHeight,
+                                ease,
+                                duration: transitionDuration,
+                                delay: 0.1 * (index + 1),
+                                force3D: true,
+                            });
+
+                            gsap.to(getCardContent(i), {
+                                x: xNew,
+                                y: offsetTop + cardHeight - 100,
+                                opacity: 1,
+                                zIndex: 40,
+                                ease,
+                                duration: transitionDuration,
+                                delay: 0.1 * (index + 1),
+                                force3D: true,
+                            });
+                            gsap.to(getSliderItem(i), { x: (index + 1) * numberSize, ease, duration: transitionDuration });
+                        }
+                    });
+                });
+            }
+
+            async function loop() {
+                // Static phase
+                await animate(".indicator", viewingTime, { x: 0, ease: "linear" });
+                // Zip phase
+                await animate(".indicator", 0.5, { x: window.innerWidth, ease: "power2.in" });
+                
+                // Reset bar
+                gsap.set(".indicator", { x: -window.innerWidth });
+                
+                // Transition
+                await step();
+                
+                // Repeat
+                loop();
+            }
+
+            init();
+        }, containerRef);
+    };
+
+    initGSAP();
+
+    return () => {
+        clearTimeout(timer);
+        if (ctx) ctx.revert();
+    };
 
   }, [language, localizedHeroData]);
 
